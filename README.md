@@ -1,21 +1,50 @@
 node-panic
 ===============
 
-This module provides a primitive postmortem debugging facility for Node.js.  A
-postmortem debugging facility is critical for root-causing issues that occur in
+This module provides a primitive postmortem debugging facility for Node.js.
+Postmortem debugging is critical for root-causing issues that occur in
 production from the artifacts of a single failure.  Without such a facility,
 tracking down problems in production becomes a tedious process of adding
-logging, trying to reproduce the problem, and repeating until enough
-information is gathered to root-cause the issue.  For reproducible problems,
-this process is merely painful for developers, administrators, and customers
-alike.  For unreproducible problems, this is untenable.
+logging, trying to reproduce the problem, and repeating until enough information
+is gathered to root-cause the issue.  For reproducible problems, this process is
+merely painful for developers, administrators, and customers alike.  For
+unreproducible problems, this is untenable.
 
 The basic idea of this implementation is to maintain a global object that
 references all of the internal state we would want for postmortem debugging.
 Then when our application crashes, we dump this state to a file, and then exit.
 
 
-Synopsis
+The basics
+----------
+
+There are only a few functions you need to know about.  The first time this
+module is loaded, it creates a global object called `caDbg` to manage program
+debug state.
+
+* `caDbg.set(key, value)`: registers the object `value` to be dumped under the
+  key `key` when the program panics.  This function replaces the value from any
+  previous call with the same key.
+* `caDbg.add(keybase, value)`: like caDbg.set, but generates a unique key based
+  on `keybase`.
+* `mod_panic.panic(msg, err)`: dumps the given error message an optional
+  exception as well as all registered debug state to a file called
+  "cacore.<pid>" and then exits the program.
+* `mod_panic.enablePanicOnCrash()`: sets up the program to automatically invoke
+  `mod_panic.panic` when an uncaught exception bubbles to the event loop
+
+When the program panics (crashes), it saves all debug state to a file called
+"cacore.<pid>".  This file is pure JSON and is best read using the "json" tool at:
+
+    https://github.com/trentm/json
+
+In the example above, the program first invokes `enablePanicOnCrash` to set up
+automatic panicking when the program crashes.  As each function is invoked, it
+adds its argument to the global debug state.  After the program crashes, you
+can see the saved state as "func1.arg" and "func2.arg" in the dump.
+
+
+Example
 --------
 
 First, a simple program:
@@ -134,35 +163,6 @@ View the "core dump":
     }
 
 
-The basics
-----------
-
-There are only a few functions you need to know about.  The first time this
-module is loaded, it creates a global object called `caDbg` to manage program
-debug state.
-
-* `caDbg.set(key, value)`: registers the object `value` to be dumped under the
-  key `key` when the program panics.  This function replaces the value from any
-  previous call with the same key.
-* `caDbg.add(keybase, value)`: like caDbg.set, but generates a unique key based
-  on `keybase`.
-* `mod_panic.panic(msg, err)`: dumps the given error message an optional
-  exception as well as all registered debug state to a file called
-  "cacore.<pid>" and then exits the program.
-* `mod_panic.enablePanicOnCrash()`: sets up the program to automatically invoke
-  `mod_panic.panic` when an uncaught exception bubbles to the event loop
-
-When the program panics (crashes), it saves all debug state to a file called
-"cacore.<pid>".  This file is pure JSON and is best read using the "json" tool at:
-
-    https://github.com/trentm/json
-
-In the example above, the program first invokes `enablePanicOnCrash` to set up
-automatic panicking when the program crashes.  As each function is invoked, it
-adds its argument to the global debug state.  After the program crashes, you
-can see the saved state as "func1.arg" and "func2.arg" in the dump.
-
-
 What's in the dump
 ------------------
 
@@ -189,13 +189,12 @@ Notes
 -----
 
 This facility was initially developed for Joyent's Cloud Analytics service.
-For more information on Cloud Analytics, see
-http://dtrace.org/blogs/dap/files/2011/07/ca-oscon-data.pdf
+For more information on Cloud Analytics, see http://dtrace.org/blogs/dap/files/2011/07/ca-oscon-data.pdf
 
 Pull requests accepted, but code must pass style and lint checks using:
 
-    https://github.com/davepacheco/jsstyle
-    https://github.com/davepacheco/javascriptlint
+* style: https://github.com/davepacheco/jsstyle
+* lint: https://github.com/davepacheco/javascriptlint
 
 This facility has been tested on MacOSX and Illumos with Node.js v0.4.  It has
 few dependencies on either the underlying platform or the Node version and so
