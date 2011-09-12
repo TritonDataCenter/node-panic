@@ -188,6 +188,15 @@ The dump itself is just a JSON object.  This module automatically fills in the f
 Notes
 -----
 
+This facility was initially developed for Joyent's Cloud Analytics service.
+For more information on Cloud Analytics, see
+http://dtrace.org/blogs/dap/files/2011/07/ca-oscon-data.pdf
+
+Pull requests accepted, but code must pass style and lint checks using:
+
+    https://github.com/davepacheco/jsstyle
+    https://github.com/davepacheco/javascriptlint
+
 This facility has been tested on MacOSX and Illumos with Node.js v0.4.  It has
 few dependencies on either the underlying platform or the Node version and so
 should work on other platforms.
