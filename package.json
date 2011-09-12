@@ -4,5 +4,9 @@
 	"description":	"Postmortem debugging facility",
 	"author":	"Joyent (joyent.com)",
 	"engines": 	{ "node": "*" },
-	"main":		"./lib/panic"
+	"main":		"./lib/panic",
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/joyent/node-panic.git"
+	}
 }
