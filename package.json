@@ -1,6 +1,6 @@
 {
 	"name":		"panic",
-	"version":	"0.1.0",
+	"version":	"0.1.1",
 	"description":	"Postmortem debugging facility",
 	"author":	"Joyent (joyent.com)",
 	"engines": 	{ "node": "*" },
@@ -8,5 +8,8 @@
 	"repository": {
 		"type": "git",
 		"url": "http://github.com/joyent/node-panic.git"
+	},
+	"bin":		{
+		"ncore":	"cmd/ncore.js"
 	}
 }

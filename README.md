@@ -172,6 +172,97 @@ The dump itself is just a JSON object.  This module automatically fills in the f
 *plus* any information added with `panicDbg.set` or `panicDbg.add`.
 
 
+Generating dumps from outside the program
+-----------------------------------------
+
+node-panic includes a tool called "ncore" for causing a node program that's
+already loaded node-panic to dump core on demand *without* any other cooperation
+from the program itself.  That is, even if the program is stuck inside an
+infinite loop, "ncore" can interrupt it to take a core dump.
+
+Caveat: this tool can be very dangerous!  Since it uses SIGUSR1, invoking it on
+non-node processes can result in all kinds of failure.  (On Illumos systems,
+"ncore" will automatically detect this case and bail out.)  Additionally, if
+another program on the same system is using the node debugger, ncore will fail.
+"ncore" tries to avoid hijacking another debugger session, but this check is
+inherently racy.  Because of these risks, this tool should be viewed as a last
+resort, but it can be extremely valuable when needed.
+
+Let's take a look at how it works:
+
+    $ cat examples/example-loop.js 
+    /*
+     * example-loop.js: example of using "ncore" tool to generate a node core
+     */
+    
+    var mod_panic = require('panic');
+    
+    function func()
+    {
+    	for (var ii = 0; ; ii++)
+    		panicDbg.set('func-iter', ii);
+    }
+    
+    console.log('starting infinite loop; use "ncore" tool to generate core');
+    func();
+
+Now run the program:
+
+    $ node examples/example-loop.js
+    starting infinite loop; use "ncore" tool to generate core
+
+In another shell, run "ncore" on the given program:
+
+    $ ncore 1369
+    attempting to attach to process 1369 ... . ok.
+
+And back in the first shell we see:
+
+    Hit SIGUSR1 - starting debugger agent.
+    debugger listening on port 5858[2011-09-13 19:20:38.265 UTC] CRIT   PANIC:
+    explicit panic: EXCEPTION: Error: Error: core dump initiated at user request
+        at caPanic (/Users/dap/work/node-panic/lib/panic.js:55:9)
+        at eval at func (/Users/dap/work/node-panic/examples/example-loop.js:9:23)
+        at ExecutionState.evaluateGlobal (native)
+        at DebugCommandProcessor.evaluateRequest_ (native)
+        at DebugCommandProcessor.processDebugJSONRequest (native)
+        at DebugCommandProcessor.processDebugRequest (native)
+        at func (/Users/dap/work/node-panic/examples/example-loop.js:9:23)
+        at Object.<anonymous>
+    (/Users/dap/work/node-panic/examples/example-loop.js:14:1)
+        at Module._compile (module.js:402:26)
+        at Object..js (module.js:408:10)
+    [2011-09-13 19:20:38.265 UTC] CRIT   writing core dump to
+    /Users/dap/work/node-panic/ncore.1369
+    [2011-09-13 19:20:38.294 UTC] CRIT   finished writing core dump
+
+And we now have a core dump from the process somewhere in the middle of the
+loop:
+
+    $ json < ncore.1369 
+    {
+      "dbg.format-version": "0.1",
+      "init.process.argv": [
+        "node",
+        "/Users/dap/work/node-panic/examples/example-loop.js"
+      ],
+      "init.process.pid": 1369,
+      "init.process.cwd": "/Users/dap/work/node-panic",
+      ...
+      "func-iter": 604762552,
+      "panic.error": "EXCEPTION: Error: Error: core dump initiated at user request\n
+    at caPanic (/Users/dap/work/node-panic/lib/panic.js:55:9)\n    at eval at func
+    (/Users/dap/work/node-panic/examples/example-loop.js:9:23)\n    at
+    ExecutionState.evaluateGlobal (native)\n    at
+    DebugCommandProcessor.evaluateRequest_ (native)\n    at
+    DebugCommandProcessor.processDebugJSONRequest (native)\n    at
+    DebugCommandProcessor.processDebugRequest (native)\n    at func
+    (/Users/dap/work/node-panic/examples/example-loop.js:9:23)\n    at
+    Object.<anonymous> (/Users/dap/work/node-panic/examples/example-loop.js:14:1)\n
+    at Module._compile (module.js:402:26)\n    at Object..js (module.js:408:10)",
+    }
+
+
 Notes
 -----
 
