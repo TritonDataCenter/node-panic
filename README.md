@@ -28,22 +28,22 @@ The basics
 ----------
 
 There are only a few functions you need to know about.  The first time this
-module is loaded, it creates a global object called `caDbg` to manage program
+module is loaded, it creates a global object called `panicDbg` to manage program
 debug state.
 
-* `caDbg.set(key, value)`: registers the object `value` to be dumped under the
-  key `key` when the program panics.  This function replaces the value from any
-  previous call with the same key.
-* `caDbg.add(keybase, value)`: like caDbg.set, but generates a unique key based
-  on `keybase`.
+* `panicDbg.set(key, value)`: registers the object `value` to be dumped under
+  the key `key` when the program panics.  This function replaces the value from
+  any previous call with the same key.
+* `panicDbg.add(keybase, value)`: like panicDbg.set, but generates a unique key
+  based on `keybase`.
 * `mod_panic.panic(msg, err)`: dumps the given error message an optional
   exception as well as all registered debug state to a file called
-  "cacore.<pid>" and then exits the program.
+  "ncore.<pid>" and then exits the program.
 * `mod_panic.enablePanicOnCrash()`: sets up the program to automatically invoke
   `mod_panic.panic` when an uncaught exception bubbles to the event loop
 
 When the program panics (crashes), it saves all debug state to a file called
-"cacore.<pid>".  This file is pure JSON and is best read using the "json" tool at:
+"ncore.<pid>".  This file is pure JSON and is best read using the "json" tool at:
 
     https://github.com/trentm/json
 
@@ -68,14 +68,14 @@ First, a simple program:
     function func1(arg1)
     {
     	/* include func1 arg in debug state */
-    	caDbg.set('func1.arg', arg1);
+    	panicDbg.set('func1.arg', arg1);
     	func2(arg1 + 10);
     }
     
     function func2(arg2)
     {
     	/* include func2 arg in debug state */
-    	caDbg.set('func2.arg', arg2);
+    	panicDbg.set('func2.arg', arg2);
     	/* crash */
     	(undefined).nonexistentMethod();
     }
@@ -87,7 +87,7 @@ First, a simple program:
     
     /*
      * The following line of code will cause this Node program to exit after dumping
-     * debug state to cacore.<pid> (including func1's and func2's arguments).
+     * debug state to ncore.<pid> (including func1's and func2's arguments).
      */
     func1(10);
     console.error('cannot get here');
@@ -96,7 +96,7 @@ First, a simple program:
 Run the program:
 
     $ node examples/example-auto.js 
-    [2011-09-12 22:37:36.410 UTC] CRIT   CA PANIC: panic due to uncaught exception: EXCEPTION: TypeError: TypeError: Cannot call method 'nonexistentMethod' of undefined
+    [2011-09-12 22:37:36.410 UTC] CRIT   PANIC: panic due to uncaught exception: EXCEPTION: TypeError: TypeError: Cannot call method 'nonexistentMethod' of undefined
         at func2 (/home/dap/node-postmortem/examples/example-auto.js:19:14)
         at func1 (/home/dap/node-postmortem/examples/example-auto.js:11:2)
         at Object.<anonymous> (/home/dap/node-postmortem/examples/example-auto.js:31:1)
@@ -106,13 +106,13 @@ Run the program:
         at Function._load (module.js:293:12)
         at Array.<anonymous> (module.js:421:10)
         at EventEmitter._tickCallback (node.js:126:26)
-    [2011-09-12 22:37:36.411 UTC] CRIT   writing core dump to /home/dap/node-postmortem/cacore.22984
+    [2011-09-12 22:37:36.411 UTC] CRIT   writing core dump to /home/dap/node-postmortem/ncore.22984
     [2011-09-12 22:37:36.413 UTC] CRIT   finished writing core dump
 
 
 View the "core dump":
 
-    $ json < /home/dap/node-postmortem/cacore.22984
+    $ json < /home/dap/node-postmortem/ncore.22984
     {
       "dbg.format-version": "0.1",
       "init.process.argv": [
@@ -169,7 +169,7 @@ The dump itself is just a JSON object.  This module automatically fills in the f
 * panic.time: time in milliseconds at which the panic occurred
 * panic.memusage: memory used when the panic occurred
 
-*plus* any information added with `caDbg.set` or `caDbg.add`.
+*plus* any information added with `panicDbg.set` or `panicDbg.add`.
 
 
 Notes

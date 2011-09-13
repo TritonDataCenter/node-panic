@@ -7,14 +7,14 @@ var mod_panic = require('panic');
 function func1(arg1)
 {
 	/* include func1 arg in debug state */
-	caDbg.set('func1.arg', arg1);
+	panicDbg.set('func1.arg', arg1);
 	func2(arg1 + 10);
 }
 
 function func2(arg2)
 {
 	/* include func2 arg in debug state */
-	caDbg.set('func2.arg', arg2);
+	panicDbg.set('func2.arg', arg2);
 	/* crash */
 	(undefined).nonexistentMethod();
 }
