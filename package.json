@@ -1,6 +1,6 @@
 {
 	"name":		"panic",
-	"version":	"0.2.0",
+	"version":	"0.2.1",
 	"description":	"Postmortem debugging facility",
 	"author":	"Joyent (joyent.com)",
 	"engines": 	{ "node": "*" },
