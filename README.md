@@ -7,6 +7,16 @@ ________                    __    __________               .__
         \/            \/                          \/     \/        \/ 
 ```
 
+NOTE
+====
+
+This module is no longer under active development.  On illumos-based systems,
+consider using native core files using MDB, which provides a much richer
+debugging environment.  For details, see:
+
+http://dtrace.org/blogs/dap/2012/01/13/playing-with-nodev8-postmortem-debugging/
+
+
 node-panic
 ===============
 
